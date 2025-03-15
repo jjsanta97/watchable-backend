@@ -113,7 +113,7 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: dic
 
 
 @router.get("/search")
-async def search_users(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
-    users = db.query(models.User).filter(models.User.username.ilike(f"%{query}%")).all()
+async def search_user(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.username.ilike(f"%{query}%")).all()
 
-    return {"users": users}
+    return {"user": user}

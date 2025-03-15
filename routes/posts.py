@@ -40,9 +40,9 @@ async def create_post(title: str = Form(...), body: str = Form(...), image: Uplo
 async def update_post(post_id: int, post_data: PostCreate, current_user: Annotated[dict, Depends(get_current_user)],
                       db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id, models.Post.user_id == current_user.id).first()
-
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
     post.body = post_data.body
     db.commit()
     db.refresh(post)
@@ -67,6 +67,25 @@ async def delete_post(post_id: int, current_user: Annotated[dict, Depends(get_cu
 async def get_all_posts(current_user: Annotated[dict, Depends(get_current_user)], db: Session = Depends(get_db)):
     posts = db.query(models.Post).options(joinedload(models.Post.author)).filter(
         models.Post.user_id != current_user.id).order_by(models.Post.create_date.desc()).all()
+
+    for post in posts:
+        post.likesCount = db.query(models.Like).filter(models.Like.post_id == post.id).count()
+        post.userLike = db.query(models.Like).filter(models.Like.post_id == post.id,
+                                                     models.Like.user_id == current_user.id).first()
+        post.commentsCount = db.query(models.Comment).filter(models.Comment.post_id == post.id).count()
+
+    return {"posts": posts}
+
+
+@router.get("/user/{user_id}", status_code=status.HTTP_200_OK)
+async def get_user_posts(current_user: Annotated[dict, Depends(get_current_user)], user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # posts = db.query(models.Post).filter(models.Post.author == user_id).order_by(models.Post.create_date.desc()).all()
+    posts = db.query(models.Post).options(joinedload(models.Post.author)).filter(
+        models.Post.user_id == user.id).order_by(models.Post.create_date.desc()).all()
 
     for post in posts:
         post.likesCount = db.query(models.Like).filter(models.Like.post_id == post.id).count()
