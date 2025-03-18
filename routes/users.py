@@ -1,4 +1,4 @@
-import os
+import os, random
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status, Query
 from sqlalchemy.orm import Session
 from models import models
@@ -112,8 +112,18 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: dic
     return {"message": "Profile picture updated successfully", "profile_picture": file_path}
 
 
-@router.get("/search")
+@router.get("/search", status_code=status.HTTP_200_OK)
 async def search_user(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username.ilike(f"%{query}%")).all()
 
     return {"user": user}
+
+
+@router.get("/suggested", status_code=status.HTTP_200_OK)
+async def get_suggested_users(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    users = db.query(models.User).all()
+    random_users = random.sample(users, min(len(users), 5))
+
+    return [
+        {"id": user.id, "username": user.username, "full_name": user.full_name, "profile_picture": user.profile_picture}
+        for user in random_users if user.id != current_user.id]
