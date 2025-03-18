@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from config import settings
 
-URL_DATABASE = "postgresql://postgres:admin123@localhost:5432/watchable_db"
+URL_DATABASE = settings.DATABASE_URL
 
 engine = create_engine(URL_DATABASE)
 

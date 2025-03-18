@@ -8,17 +8,13 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from schemas.user_schemas import Token
 from core.dependencies import get_db
-
-import logging
-
-logger = logging.getLogger('uvicorn.error')
-logger.setLevel(logging.DEBUG)
+from core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-SECRET_KEY = "clave_secreta"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MIN = 180
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MIN = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
